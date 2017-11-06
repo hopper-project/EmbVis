@@ -3,7 +3,7 @@
 EmbVis is a tool for visualizing and browsing data object embeddings such as word embeddings and exponential family embeddings. 
 It is written in JS and it uses the D3 library to display data points. It also allows for the search of object embeddings (e.g. words). 
 
-(C) Copyright 2016, Kriste Krstovski kriste.krstovski@columbia.edu
+Kriste Krstovski kriste.krstovski@columbia.edu
 
 This is free software, you can redistribute it and/or modify it under the terms of the GNU General Public License.
 
