@@ -1,0 +1,313 @@
+
+<!-- EmbVis - Toll for visualizing and browsing data object embeddings -->
+<!-- Author: Kriste Krstovski, 2016-->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>EmbVis</title>
+  <style type="text/css">
+    div#map { margin: 0 auto 0 auto; }
+  </style>
+  <style>
+    html, body 
+    {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    #map 
+    {
+     height: 100%;
+    }
+    .tooltip 
+    {
+    position: absolute;
+    line-height: .7;
+    font-weight: bold;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.99);
+    color: #fff;
+    font-weight: bold;
+    font: 11.5px sans-serif;
+    border-radius: 2px;
+    pointer-events: none; 
+    border-radius: 6px
+    stroke: blue;
+    stroke-width: 3px;   
+    }
+
+  .datapoints,
+  .datapoints svg 
+  {
+    position: absolute;
+  }
+
+  .datapoints svg 
+  {
+    width: 300px;
+    height: 35px;
+    padding-right: 100px;
+    font: 14px arial;
+  }
+  .datapoints circle 
+  {
+    stroke-width: 0.5px;
+  }
+
+  .box
+  {
+    margin: 20px auto;
+    width: 300px;
+    height: 30px;
+    position: absolute;
+    top: -20px;
+    left: 10px;
+  }
+  .cont_box
+  {
+    width: 300px;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+  .cont_box input#search
+  {
+    width: 340px;
+    height: 40px;
+    background: #fcfcfc;
+    border: 30px;
+    font-size: 12pt;
+    float: left;
+    color: #000000;
+    padding-left: 45px;
+    padding-right: 15px;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 50px;
+    border-radius: 30px;
+  }
+
+  /*TODO Check icon*/
+  .cont_box .icon
+  {
+  position: absolute;
+  top: 50%;
+  margin-left: 17px;
+  margin-top: 17px;
+  z-index: 1;
+  color: #000000;
+  }
+  .cont_box input#search:hover, .cont_box input#search:focus, .cont_box input#search:active
+  {
+  outline:none;
+  background: #ffffff;
+  }
+</style>
+</head>
+<body>
+  
+    <div id="map"></div>
+    <div class="box">
+      <div class="cont_box">
+       <h1 style="font-family:arial;font-size:300%;padding: -5px -10px -20px 30px; ">EmbVis</h1>
+       <input type="search" id="search" name="searchtxt" placeholder="Search for an object embedding..." onkeydown="if (event.keyCode == 13) title_search();"/>
+      </div>
+   </div>
+
+   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD8H5UIHX4E0hgK6-T1dvtEdq9CAGM10vg"></script>
+   <script src="http://d3js.org/d3.v3.min.js"></script>
+   
+    <!-- Specify the data source file -->
+    <!-- Data source file has the following format:  -->
+    <!-- var objectpoints = [ {"title" : "data_object_title_to_be_displayed","image" : "image_file", "coord" : [longitude_value,latitude_value], "fill" : "circle_fill_color", "stroke" : "stroke_fill_color", "category" : "category_type**"}, ... ] --> 
+    <!-- Here is an example line:  -->
+    <!-- {"title": "cosine", "coord": [-11.7836261004,-26.4969584853], "fill": "0.8", "stroke": "blue", "category": "1"}, -->
+    <script src="words_example.js"></script>
+    
+    <form method="get" action="/search" id="search">
+    <input name="q" type="text" size="40" placeholder="Search..." />
+   </form>
+   <script>
+
+    function findtitle(title) 
+    {
+      return objectpoints.filter
+      (
+        function(objectpoints)
+        { 
+          return objectpoints.title == title 
+        }
+      );
+    }
+    function title_search()
+    {
+      search_title = document.getElementsByName("searchtxt")[0];
+      var found = findtitle(search_title.value)
+      if (found!=null){
+        d = new google.maps.LatLng(found[0].coord[1], found[0].coord[0]);
+        map.setCenter(d);
+        if (objectpoint) {objectpoint.setMap(null);}
+        objectpoint=new google.maps.Marker({position:d, map:map, draggable: true});
+        map.panTo(d);
+        }
+      else {
+            //Display a message when an object is not found
+           }
+    }
+
+
+   function CoordMapType(tileSize) 
+   {
+    this.tileSize = tileSize;
+   }
+
+   CoordMapType.prototype.maxZoom = 30;
+   CoordMapType.prototype.name = 'EmbVis';
+   CoordMapType.prototype.alt = 'Object Embeddings Visualizer and Browser';
+   CoordMapType.prototype.getTile = function(coord, zoom, ownerDocument) 
+   {
+    var div = ownerDocument.createElement('div');
+    div.innerHTML = coord;
+    div.style.width = this.tileSize.width + 'px';
+    div.style.height = this.tileSize.height + 'px';
+    div.style.fontSize = '10';
+    div.style.borderStyle = 'hidden';
+    div.style.borderWidth = '1px';
+    div.style.borderColor = '#FFFFFF';
+    div.style.backgroundColor = '#FFFFFF';
+    return div;
+  };
+
+  var myLatlng = new google.maps.LatLng(0, 0);
+  var objectpoint;
+  var map = new google.maps.Map
+  (
+
+    document.getElementById('map'), 
+    {
+      draggableCursor: 'crosshair',
+      zoom: 6,
+      center: myLatlng,
+      streetViewControl: false,
+      zoomControl: true,
+      zoomControlOptions: {
+        position: google.maps.ControlPosition.LEFT_CENTER
+      },
+      scaleControl: true,
+      mapTypeId: 'coordinate',
+      mapTypeControlOptions: {
+        mapTypeIds: ['moon']
+      }
+    }
+    );
+
+  map.addListener
+  (
+    'maptypeid_changed', function() 
+    {
+      var showStreetViewControl = map.getMapTypeId() !== 'coordinate';
+      map.setOptions
+      (
+      {
+        streetViewControl: showStreetViewControl
+      }
+      );
+    }
+  );
+
+  var overlay = new google.maps.OverlayView();
+  overlay.onAdd = function() {
+  var layer = d3.select(this.getPanes().overlayMouseTarget).append("div")
+  .attr("class", "datapoints");
+
+  overlay.draw = function() 
+  {
+  var projection = this.getProjection(), padding = 10;
+
+  var color = d3.scale.linear().domain([0, 1]).range(["beige", "red"]); 
+
+  var tooltip = d3.select("body")
+  .append("div")
+  .attr("class", "tooltip")
+  .style("opacity", 0);
+
+  var objectpoint = layer.selectAll("svg")
+  .data(d3.entries(objectpoints))
+          .each(transform)
+          .enter().append("svg:svg")
+          .each(transform)
+          .attr("class", "objectpoint");
+
+  objectpoint.append("svg:circle")
+        .attr("r", function(d) 
+        { 
+          if (d.value.title!=null) return 4.5;
+          else return 6.5;;
+        })
+        .attr("cx", padding)
+        .attr("cy", padding)
+        .attr("stroke", function(d) 
+        { 
+         return d.value.stroke;
+        })
+          //.attr("stroke-width","5")
+        .on("mouseover", function(d) 
+        {
+          if (d.value.image!=null)
+            {
+              tooltip.transition()
+              .duration(200)
+              .style("opacity", .9)
+              tooltip.html("<span style='color:red'><img src='"+ d.value.image+"'></span>")
+              .style("left", (d3.event.pageX + 5) + "px")
+              .style("top", (d3.event.pageY - 28) + "px")
+            }
+        })
+        .on("mouseout", function(d) 
+        {
+          if (d.value.image!=null)
+            {
+              tooltip.transition()
+              .duration(200)
+              .style("opacity", 0);
+            }
+        })
+        .style("fill", function(d) 
+        {
+          var colorValue = d.value.fill
+          if (colorValue) 
+          {
+            return color(colorValue);
+          } 
+          else 
+          {
+            return "#ccc";
+          }
+        });
+        
+  objectpoint.append("text")
+        .attr("x", padding+7)
+        .attr("y", padding)
+        .attr("dy", ".31em")
+        .text(function(d) 
+        {
+          if (d.value.title!=null)
+            return d.value.title;
+          else
+              return "";
+        });
+          
+  function transform(d) 
+  {
+        d = new google.maps.LatLng(d.value.coord[1], d.value.coord[0]);
+        d = projection.fromLatLngToDivPixel(d);
+        return d3.select(this)
+                 .style("left", (d.x - padding) + "px")
+                .style("top", (d.y - padding) + "px");
+          
+  }
+  };
+  };
+  overlay.setMap(map);   
+  </script>
+  </body>
+  </html>
